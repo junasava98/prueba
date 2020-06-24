@@ -1,0 +1,286 @@
+---
+title: "Ejemplo ACM (data: DogBreeds)"
+author: "Julieth Natalia Salazar Vargas & Mavelyn Sterling Londoño"
+date: "Marzo/26/2020"
+output: 
+  html_document:
+    theme: default
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+      number_section: true
+    highlight: default
+---
+
+### _Conjunto de Datos_
+<div class=text-justify>
+La base de datos utilizada para el desarrollo del ejercicio corresponde a "DogBreeds", la cual corresponde a una tabla de 27 filas (razas de perros) y 7 columnas (variables cualitativas respecto al físico: tamaño, peso, velocidad; variables relacionadas con la actividad psiquíca: inteligencia, afectividad, agresividad; y la última es una variable suplementaria: función). Fine, J (1996).
+
+|      Variables      |    |  Categorías |     |
+|:-------------------:|:----------------:|:------------:|:--------------:|
+| Tamaño (SIZE)       | Small (sma)      | Medium (med) | Large (lar)    |
+| Peso (WEIG)         | Lightwight (lig) | Medium (med) | Heavy (hea)    |
+| Velocidad (SPEE)    | Low (low)        | Medium (med) | High (hig)     |
+| Inteligencia (INTE) | Low (low)        | Medium (med) | High (hig)     |
+| Afectividad (AFEE)  | Low (low)        | High (hig)   |                |
+| Agresividad (AGGR)  | Low (low)        | High (hig)   |                |
+| Función (FUNC)      | Company (com)    | Hunt (hun)   | Utility (util) |
+</div>
+
+```{r cargaDatos, echo=TRUE, message=FALSE}
+library(ade4)
+library(FactoClass)
+library(factoextra)
+library(FactoMineR)
+library(ggplot2)
+library(knitr)
+
+data("DogBreeds")
+DogBreeds
+```
+
+
+### _Análisis Descriptivo_
+<div class=text-justify>
+Inicialmente se propone realizar una análisis descriptivo de la información obtenida de las 27 razas de perros, donde se evidencia que según las características físicas la mayoría de los perros son de tamaño grande con un total de 15, de peso mediano (14), y velocidad baja (10). Respecto a las varibles psiquícas, la inteligencia media contiene la mayor cantidad de individuos (13), mientras que para la afectividad y agresividad la distribución de los resultados es similar.
+</div>
+```{r Descriptivas}
+summary(DogBreeds)
+```
+
+## Análisis de Correspondencias Múltiples
+
+### _Representación Simultanea:_
+<div class=text-justify>
+Con base a la Figura 1, se observa que el porcentaje de varianza explicado en el primer plano factorial es del 52%, adicionalmente, permite identificar algunas tipologías que están describiendo las asociaciones entre las modalidades, como por ejemplo: 
+
+* Tamaño Mediano se asocia con velocidad media y algunos perros con estás características son: podb, boxes, dalm, labr.
+* Afectividad Alta se asocia con Inteligencia Media y agresividad baja, algunos perros que tienen dichas características son: cani, foxt y cock.
+* Peso ligero y tamaño pequeño son características que se resaltan más en perro como: teck, chin, buld y peki.
+* La raza de perro con una velocidad baja sobresaliente corresponde a bass.
+* Peso medio se asocia con una inteligencia alta, donde las razas coll, podf, masa y sett son los mejores representados.
+* Poin y dobe son razas de perros cuya velocidad es alta (SPEE.hig).
+* Gasc, galg y foxh presentan valores significativos en la variable tamaño grande (Size.lar)
+* Finalmente, las razas restantes obtienen valores similares en las variables agresividad alta, afectividad baja, inteligencia baja y peso alto.  
+
+</div>
+
+```{r ACM}
+datos=DogBreeds
+ACM_Perro= MCA(datos, ncp = 6, graph = FALSE, quali.sup = 7)
+ACM_Perro1= MCA(datos[1:6], ncp = 6, graph = FALSE)
+fviz_mca_biplot(ACM_Perro1, repel = TRUE,
+                ggtheme = theme_minimal(), title = "")
+```
+
+<div class=text-center>
+Figura 1. Representación Simultanea ACM
+</div>
+
+
+```{r contribuciones}
+# Contributions of rows to dimension 1
+fviz_contrib(ACM_Perro, choice = "var", axes = 1, top = 15)
+# Contributions of rows to dimension 2
+fviz_contrib(ACM_Perro, choice = "var", axes = 2, top = 15)
+# Contribucion total para la componente 1 y 2
+fviz_contrib(ACM_Perro, choice = "var", axes = 1:2, top = 15)
+```
+
+### _1. ¿Cuántos ejes se generan en el ACM?_
+<div class=text-justify>
+Se generan p-s ejes, donde p = 16 categorías y s = 6 preguntas, entonces la cantidad de ejes que se generan correponde a 16-6 = 10. Esto también se puede ver en términos del número de valores propios.
+</div>
+```{r ValoresPropios, echo=TRUE}
+ACM_Perro1$eig[,1]
+```
+
+### _2. ¿Qué relación existe entre la Inercia Total, el número de modalidades y el número de variables cualitativas?_
+<div class=text-justify>
+La relación es que la Inercia Total es el cociente entre el número de modalidades y el número de variables cualitativas menos 1. 
+</div>
+
+$I = \frac{p}{s} - 1 = \frac{16}{6}-1 = 1.666667$
+
+```{r ValoresPropioS2}
+sum(ACM_Perro1$eig[,1])
+```
+
+### _3. ¿Qué similitudes existen entre las razas de perros?_
+<div class=text-justify>
+Para identificar las similitudes existentes entre las razas de perro resulta útil apoyarse de los planos factoriales. La Figura 2 muestra que los similares son:
+
+* Peki y chin
+* Coll y podf
+* Podb y boxe
+* Labr y dalm
+* Teck y buld
+* Sett y masa
+</div>
+
+```{r planoFila}
+fviz_mca_ind(ACM_Perro, repel = TRUE, title=" ")
+
+```
+<div class=text-center>
+Figura 2. Nube de individuos (raza de perros)
+</div>
+
+### _4. Con base a la nube de individuos cuales son los valores excéntricos? Analizar las contribuciones y cosenos por individuos_
+
+<div class=text-justify>
+El $Cos^2$ da información respecto a la calidad de representación para cada eje, es por esto, que con ayuda de la Tabla 1 se observa que las razas buld y teck son las que mayor represente para la primera componente, mientras que para la segunda componente bass, dalm y labr obtienen un $Cos^2$ más alto.
+</div2>
+
+```{r NubePerrosCosTABLA}
+kable(round(ACM_Perro$ind$cos2[,1:2],4), caption = "Tabla 1. Cos2 para la componente 1 y 2")
+```
+
+<div class=text-justify>
+Referente a la calidad de representación en el primer plano factorial según la Figura 3, se puede decir que las razas buld, teck, peki, chih, dalm, labr son los individuos que presentan un $Cos^2$ más alto, es decir, la inercia se ve mejor explicada por ellos.
+</div>
+
+
+```{r NubePerrosCos}
+fviz_mca_ind(ACM_Perro, col.ind =  "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE, # Avoid text overlapping
+             ggtheme = theme_minimal(), title="", labelsize=4)
+```
+<div class=text-center>
+Figura 3. Nube de individuos y Cos2
+</div>
+
+
+
+<div class=text-justify>
+Las contribuciones por Individuos permiten identificar cuales son los que más contribuyen en la construcción de los ejes, por está razón se generó la Tabla 2, allí se puede visualizar que para el primer eje la variable que más aporta corresponde a dogo, buld y teck, y para el eje 2 la mayor contribución está dada por las razas bass y podb. 
+</div>
+```{r NubePerrosContTabla}
+kable(round(ACM_Perro$ind$contrib[,1:2],4), caption = "Tabla 2. Contribución para la componente 1 y 2")
+```
+
+<div class=text-justify>
+Adicionalmente se genera la Figura 4, donde se observa la contribución para la construcción del primer plano factorial, donde los individuos con colores cercanos a rojo son quienes dan un mayor aporte, caso contrario a los cercanos al tono azul. De aquí se resalta entonces los indivuduos como peki y chih como los de mayor valor de contribución, y gasc, beau, podf y coll como los de menos valor.
+</div>
+
+```{r NubePerrosCont}
+fviz_mca_ind(ACM_Perro, col.ind = "contrib",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE, # Avoid text overlapping
+             ggtheme = theme_minimal(), title="", labelsize=4)
+```
+
+<div class=text-center>
+Figura 4. Nube de individuos y Contribuciones
+</div>
+
+### _5.	Con base a la nube de variables cuales son las modalidades más asociadas?_
+
+<div class=text-justify>
+Se observa en la Figura 5, que la modalidad de peso ligero (WEIG.lig) y tamaño pequeño (SIZE.sma) se encuentran con una alta asociación y tiene un relación significativa con la baja velocidad (SPEE.low). Además, hay una relación estrecha entré la afectividad baja, el tamaño grande y una agresividad alta, así como una inteligencia mediana con agresividad baja y afectividad alta. Por último, el tamaño mediano (SIZE.med), se encuentra altamente asociaciada con velocidad media (SPEE.med).
+</div>
+
+```{r planoColumna}
+fviz_mca_var(ACM_Perro1, 
+             repel = TRUE, # Avoid text overlapping
+             ggtheme = theme_minimal(), title="", labelsize=4)
+```
+<div class=text-center>
+Figura 5. Nube de variables
+</div>
+
+### _6. Realice una interpretación de las contribuciones absolutas y cosenos cuadrados para las modalidades y variables. Los valores excéntricos tienen contribuciones altas?_
+
+<div class=text-justify>
+Las modalidades de mayor coseno cuadrado para el primer plano factorial corresponden a peso ligero y tamaño largo, mientras que la de menor valor inteligencia alta.
+</div>
+
+```{r NubeVariablesCos2}
+# Representacion de las variables por cos2
+fviz_mca_var(ACM_Perro1, col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE, # Avoid text overlapping
+             ggtheme = theme_minimal(), title="", labelsize=4)
+```
+
+
+<div class=text-justify>
+Las modalidades de dan una mayor contribución para la construcción del primer plano factorial corresponden a peso ligero y tamaño pequeño, por el contrario, se encuentran las modalidades relacionadas con la inteligencia y la agresividad.
+</div>
+
+```{r NubeVariablesCont}
+# Representacion de las variables por contribucion
+fviz_mca_var(ACM_Perro1, col.var = "contrib",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE, # Avoid text overlapping
+             ggtheme = theme_minimal(), title="", labelsize=4)
+```
+
+### _7. De la base de datos activa generé un 5% de datos faltantes o no disponibles (NA) y utilice la función impute.MCA para completar la base de datos. Luego realice el ACM y compare el caso de datos completos vs imputación._
+
+<div class=text-justify>
+Como se observa en la figura,  al tener datos datos faltantes se obtiene nuevas modalidades y categorías, es decir, dependiendo de donde de la categoría en la que este encuentre el valor faltante, esta categoría automáticamente aparece como nueva. 
+</div>
+
+```{r DatosFaltantes}
+
+ACMNa <- function(Xo,a)	# Genera a% NAs , md: miss data
+{
+  X. <- as.matrix(Xo)
+  n <- nrow(X.) ; p <- ncol(X.) ; N <- n*p
+  m <- sample(N,round(a*N,0)) ; d <- length(m)
+  
+  for(j in 1:d){
+    X.[m[j]] <- NA
+  } 
+  
+  return(X.)
+}
+ Datos_Faltantes=ACMNa(DogBreeds[-7] , 0.05)
+ ACM_Perro_Na= MCA(Datos_Faltantes, ncp = 6, graph = FALSE)
+ 
+ kable(round(ACM_Perro_Na$eig[,1],4))
+ 
+ fviz_mca_biplot(ACM_Perro_Na, 
+                 repel = TRUE, # Avoid text overlapping (slow if many point)
+                 ggtheme = theme_minimal(), title = "")
+```
+
+
+### _8. Se tiene la variable Edad (años) como variable suplementaria:_
+<div class=text-justify>
+Se tiene la variable suplementaria Edad, la cual es cuantitativa, con la que se calcula el ACM obteniendo las siguientes coordenadas
+</div>
+
+```{r VariableSuplementaria}
+Edad_perros<-c(2 ,2  ,2, 2,  2,  4,  1,  1,  1,  4,
+                  4,  2,  2,  2,  2,  4,  4,  5,  5,  5,
+                  5,  6,  6,  7,  7,  7,  5)        
+
+DatosEdad<-cbind(DogBreeds[-7],Edad_perros)
+
+ACM_Edad<-MCA(DatosEdad,ncp=7,graph = FALSE, quanti.sup = 7)
+ACM_Edad$quanti.sup$coord
+
+kable(round(ACM_Edad$quanti.sup$coord,4), caption = "Coordenada de ACM con la variable suplementaria edad")
+
+```
+
+
+### _9. Cómo se encuentran las coordenadas de la variable suplementaria_
+
+<div class=text-justify>
+Como se observa en la figura, se obtiene  las categorías de la variable cualitativa Función, las cuales son com, uti, hun.
+</div>
+
+```{r CoordenadaVS}
+ACM_Perro1= MCA(DogBreeds, ncp = 6, graph = FALSE, quali.sup = 7)
+ACM_Perro1$quali.sup$coord
+kable(round(ACM_Perro1$quali.sup$coord,4), caption = "Coordenada de ACM con la variable suplementaria Función")
+
+fviz_mca_biplot(ACM_Perro1, 
+                 repel = TRUE, # Avoid text overlapping (slow if many point)
+                 ggtheme = theme_minimal(), title = "")
+```
